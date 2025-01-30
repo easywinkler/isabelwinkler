@@ -206,36 +206,34 @@
 document.addEventListener("DOMContentLoaded", function () {
   const toggleSwitch = document.getElementById("toggleLanguage");
 
-  // Prüfen, ob die gespeicherte Sprache Englisch ist und umschalten
-  if (localStorage.getItem("language") === "en") {
-      toggleSwitch.checked = true;
-  }
-
-  // Funktion zum Ermitteln des Seitenpfads ohne Sprachendung
   function getPageName() {
-      let currentPage = window.location.pathname.split("/").pop(); // Aktuelle Seite ermitteln
-      return currentPage.split("-")[0].split(".")[0]; // Entfernt die Sprachendung und Dateiendung
+      let path = window.location.pathname;
+      let page = path.split("/").pop() || "index"; // Falls leer, Standard auf "index"
+      return page.replace(".html", "").replace("-en", ""); // Entferne .html und -en
   }
 
-  // Event Listener für den Umschalter
-  toggleSwitch.addEventListener("change", function () {
-      let pageName = getPageName(); // Seite ohne Dateiendung
-
-      // Sprache speichern und Umleitung zur richtigen Seite
-      if (toggleSwitch.checked) {
-          localStorage.setItem("language", "en"); // Sprache auf Englisch setzen
-          window.location.href = `${pageName}-en.html`; // Zur englischen Version umleiten
-      } else {
-          localStorage.setItem("language", "de"); // Sprache auf Deutsch setzen
-          window.location.href = `${pageName}.html`; // Zur deutschen Version umleiten
-      }
-  });
-
-  // Beim Laden der Seite, prüfe die gespeicherte Sprache und lade die passende Seite
-  let pageName = getPageName(); // Seite ohne Dateiendung
-  if (localStorage.getItem("language") === "en" && !window.location.pathname.includes("-en")) {
-      window.location.href = `${pageName}-en.html`; // Weiterleitung zur englischen Version der Seite
-  } else if (localStorage.getItem("language") === "de" && window.location.pathname.includes("-en")) {
-      window.location.href = `${pageName}.html`; // Weiterleitung zur deutschen Version der Seite
+  function updateLanguageSwitch() {
+      toggleSwitch.checked = window.location.pathname.includes("-en");
   }
+
+  function switchLanguage() {
+      let pageName = getPageName();
+      let isEnglish = toggleSwitch.checked;
+      let newPage = isEnglish ? `/${pageName}-en.html` : `/${pageName}.html`;
+
+      localStorage.setItem("language", isEnglish ? "en" : "de");
+      window.location.href = newPage;
+  }
+
+  toggleSwitch.addEventListener("change", switchLanguage);
+
+  // Initiale Sprachprüfung, aber nur wenn wir auf "/" oder einer deutschen Seite sind
+  let savedLang = localStorage.getItem("language");
+  let currentLang = window.location.pathname.includes("-en") ? "en" : "de";
+
+  if (savedLang === "en" && currentLang === "de" && getPageName() === "index" && window.location.pathname !== "/index.html") {
+      window.location.href = "/index-en.html";
+  }
+
+  updateLanguageSwitch();
 });
